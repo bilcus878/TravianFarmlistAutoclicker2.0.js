@@ -1,9 +1,9 @@
 // ==UserScript==
 // @name         TravianFarmlistAutoclicker2.0
-// @namespace    travian-farmlist-autosender
+// @namespace    https://github.com/bilcus878
 // @version      1.0
 // @description  Automaticky kliká na tlačítko "Poslat všechny farmlisty" každých 4–6 minut.
-// @match        https://ts6.x1.europe.travian.com/build.php*
+// @match        *://*.travian.com/build.php*
 // @grant        none
 // ==/UserScript==
 
