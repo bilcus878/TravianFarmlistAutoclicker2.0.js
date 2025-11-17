@@ -1,5 +1,5 @@
 NÁZEV: TravianFarmlistAutoclicker2.0
-VERZE: 1.0
+VERZE: 1.1
 POPIS: Automatické odesílání farmlistů na Travian serveru pomocí Tampermonkey.
 
 ÚČEL SCRIPTU
@@ -59,10 +59,6 @@ Pokud tlačítko "Poslat všechny farmlisty" není nalezeno, skript to zkusí zn
 
 POŽADAVKY
 
-Travian server: ts6.x1.europe.travian.com
-
-URL začínající na https://ts6.x1.europe.travian.com/build.php
-
 Tampermonkey v5.0 nebo novější
 
 Zapnutý JavaScript v prohlížeči
@@ -94,3 +90,7 @@ Delay prvního kliku nastaven na 10s
 Oprava hlavičky scriptu pro správné zobrazení názvu
 
 Celkové čištění kódu
+
+Verze 1.1:
+
+Přidaná podpora všech travian serverů
