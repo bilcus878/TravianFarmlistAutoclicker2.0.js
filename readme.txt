@@ -1,5 +1,5 @@
 NÁZEV: TravianFarmlistAutoclicker2.0
-VERZE: 1.3
+VERZE: 1.0
 POPIS: Automatické odesílání farmlistů na Travian serveru pomocí Tampermonkey.
 
 ÚČEL SCRIPTU
