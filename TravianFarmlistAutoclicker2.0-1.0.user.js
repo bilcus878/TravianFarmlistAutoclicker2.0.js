@@ -10,8 +10,8 @@
 (function () {
     'use strict';
 
-    const MIN_DELAY = 4 * 60 * 1000;   // 4 min v ms
-    const MAX_DELAY = 6 * 60 * 1000;   // 6 min v ms
+    const MIN_DELAY = 2 * 60 * 1000;   // 4 min v ms
+    const MAX_DELAY = 3 * 60 * 1000;   // 6 min v ms
     const FIRST_CLICK_DELAY = 10 * 1000; // 10 s po zapnutí bota
 
     let enabled = false; // po načtení stránky je bot VYPNUTÝ
