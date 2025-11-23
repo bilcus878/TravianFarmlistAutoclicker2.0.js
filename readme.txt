@@ -94,3 +94,37 @@ Celkové čištění kódu
 Verze 1.1:
 
 Přidaná podpora všech travian serverů
+
+Nové funkce ve verzi 1.2:
+
+Permanentní informační panel - Toast s informacemi je viditelný celou dobu běhu bota (nezmizel po 5 sekundách)
+Počítadlo kliků - Bot počítá, kolikrát už poslal farmlisty
+Vylepšený ovládací panel - Barevné indikátory (🟢 ON / 🔴 OFF) a zobrazení počtu odeslaných útoků
+Hover efekt - Panel se při najetí myší lehce zvětší
+
+Bezpečnostní vylepšení:
+
+Kontrola disabled tlačítka - Bot neklikne, pokud je tlačítko neaktivní
+Automatické zrušení timeoutů - Při vypnutí bota se všechny naplánované akce správně zaruší
+Sledování změny URL - Bot detekuje, když opustíš Farmlist tab
+Retry logika - Pokud není tlačítko nalezeno, zkusí to znovu za 30s
+
+Lepší přehlednost:
+
+Permanentní toast zobrazuje:
+
+✓ Čas posledního kliku
+Celkový počet odeslaných farmlistů
+Přesný čas příštího kliku
+
+
+Emoji ikony pro rychlou orientaci (✓, ⚠️, 🔴, 🟢)
+Statistiky při vypnutí - Vidíš celkový počet odeslaných útoků
+
+⚙️ Technické úpravy:
+
+Interval: 2-3 minuty (náhodně mezi 2-3 min pro větší přirozenost)
+První klik po zapnutí: 10 sekund
+Retry při chybě: 30 sekund
+Lepší správa paměti (odstranění starých toastů, čištění timeoutů)
+RetryClaude can make mistakes. Please double-check responses. Sonnet 4.5
