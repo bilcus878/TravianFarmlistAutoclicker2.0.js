@@ -1,8 +1,8 @@
 // ==UserScript==
-// @name         TravianFarmlistAutoclicker2.0
+// @name         TravianFarmlistAutoclicker 2.12.3 UI FIX FINAL + CUSTOM SPACING
 // @namespace    https://github.com/custom
-// @version      1.3
-// @description  Farmlist bot
+// @version      2.12.5
+// @description  Farmlist bot with improved UI (Bot:OFF up, minimal spacing, perfect bottom alignment)
 // @match        *://*.travian.com/build.php*
 // @grant        none
 // ==/UserScript==
@@ -18,6 +18,7 @@
     let totalSent = parseInt(localStorage.getItem("fl_totalSent") || "0");
     let totalRuntime = parseInt(localStorage.getItem("fl_totalRuntime") || "0");
     let lastAttack = localStorage.getItem("fl_lastAttack") ? new Date(localStorage.getItem("fl_lastAttack")) : null;
+    let attackHistory = JSON.parse(localStorage.getItem("fl_attackHistory") || "[]");
     let sessionSent = 0;
     let sessionStart = null;
 
@@ -44,7 +45,10 @@
         intervalPreset: localStorage.getItem("fl_interval") || "2-3",
         customMin: parseInt(localStorage.getItem("fl_custom_min") || "2"),
         customMax: parseInt(localStorage.getItem("fl_custom_max") || "3"),
-        firstAttackDelay: parseInt(localStorage.getItem("fl_first_attack_delay") || "10")
+        firstAttackDelay: parseInt(localStorage.getItem("fl_first_attack_delay") || "10"),
+        randomDeviation: parseInt(localStorage.getItem("fl_random_deviation") || "0"),
+        scheduledStop: localStorage.getItem("fl_scheduled_stop") || "",
+        soundAlert: localStorage.getItem("fl_sound_alert") || "none"
     };
 
     function saveConfig() {
@@ -57,6 +61,9 @@
         localStorage.setItem("fl_custom_min", config.customMin);
         localStorage.setItem("fl_custom_max", config.customMax);
         localStorage.setItem("fl_first_attack_delay", config.firstAttackDelay);
+        localStorage.setItem("fl_random_deviation", config.randomDeviation);
+        localStorage.setItem("fl_scheduled_stop", config.scheduledStop);
+        localStorage.setItem("fl_sound_alert", config.soundAlert);
     }
 
     function saveStats() {
@@ -65,6 +72,7 @@
         if (lastAttack) {
             localStorage.setItem("fl_lastAttack", lastAttack.toISOString());
         }
+        localStorage.setItem("fl_attackHistory", JSON.stringify(attackHistory));
     }
 
     /* ============================================================
@@ -83,13 +91,24 @@
     };
 
     function randomDelay() {
+        let delay;
+        
         if (config.intervalPreset === "custom") {
             const min = config.customMin * 60000;
             const max = config.customMax * 60000;
-            return min + Math.random() * (max - min);
+            delay = min + Math.random() * (max - min);
+        } else {
+            const p = preset[config.intervalPreset];
+            delay = p.min + Math.random() * (p.max - p.min);
         }
-        const p = preset[config.intervalPreset];
-        return p.min + Math.random() * (p.max - p.min);
+        
+        // Přidej náhodnou odchylku
+        if (config.randomDeviation > 0) {
+            const deviation = (Math.random() * 2 - 1) * config.randomDeviation * 1000; // -X až +X sekund
+            delay += deviation;
+        }
+        
+        return Math.max(1000, delay); // Minimálně 1 sekunda
     }
 
     function findButton() {
@@ -119,6 +138,50 @@
         if (h) return `${h}h ${m % 60}m`;
         if (m) return `${m}m ${s % 60}s`;
         return `${s}s`;
+    }
+
+    /* ============================================================
+       SOUND ALERTS
+    ============================================================ */
+
+    function playSound() {
+        if (config.soundAlert === "none") return;
+        
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        const oscillator = audioContext.createOscillator();
+        const gainNode = audioContext.createGain();
+        
+        oscillator.connect(gainNode);
+        gainNode.connect(audioContext.destination);
+        
+        if (config.soundAlert === "beep") {
+            // Krátké pípnutí
+            oscillator.frequency.value = 800;
+            gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1);
+            oscillator.start(audioContext.currentTime);
+            oscillator.stop(audioContext.currentTime + 0.1);
+        } else if (config.soundAlert === "ding") {
+            // Příjemný ding zvuk
+            oscillator.frequency.value = 1000;
+            gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
+            oscillator.start(audioContext.currentTime);
+            oscillator.stop(audioContext.currentTime + 0.3);
+            
+            // Druhý tón pro "ding" efekt
+            setTimeout(() => {
+                const osc2 = audioContext.createOscillator();
+                const gain2 = audioContext.createGain();
+                osc2.connect(gain2);
+                gain2.connect(audioContext.destination);
+                osc2.frequency.value = 1200;
+                gain2.gain.setValueAtTime(0.2, audioContext.currentTime);
+                gain2.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.2);
+                osc2.start(audioContext.currentTime);
+                osc2.stop(audioContext.currentTime + 0.2);
+            }, 100);
+        }
     }
 
     /* ============================================================
@@ -333,6 +396,8 @@
                 <div style="height:5px"></div>
                 Interval: ${intervalLabel}<br>
                 Prodlení prvního útoku: ${config.firstAttackDelay}s<br>
+                Náhodná odchylka: ±${config.randomDeviation}s<br>
+                Plánované vypnutí: ${config.scheduledStop || "-"}
             `;
         }
     }
@@ -344,6 +409,21 @@
     function clickOnce() {
         if (!enabled) return;
 
+        // Kontrola plánovaného vypnutí
+        if (config.scheduledStop) {
+            const now = new Date();
+            const [hours, minutes] = config.scheduledStop.split(':').map(Number);
+            const stopTime = new Date();
+            stopTime.setHours(hours, minutes, 0, 0);
+            
+            if (now >= stopTime) {
+                console.log("Plánované vypnutí bota v " + config.scheduledStop);
+                stopBot();
+                alert("Bot byl automaticky vypnut v naplánovaný čas: " + config.scheduledStop);
+                return;
+            }
+        }
+
         const btn = findButton();
         if (!btn) {
             console.warn("Farmlist button not found, retrying in 30s");
@@ -354,8 +434,16 @@
         setTimeout(() => { panel.style.transform = "scale(1)"; }, 120);
 
         btn.click();
+        playSound(); // Přehrát zvuk při útoku
 
         lastAttack = new Date();
+        
+        // Přidat do historie
+        attackHistory.unshift(lastAttack.getTime());
+        if (attackHistory.length > 25) {
+            attackHistory = attackHistory.slice(0, 25);
+        }
+        
         sessionSent++;
         totalSent++;
         
@@ -431,14 +519,58 @@
             color: #fff;
             font-size: 13px;
             z-index: 999998;
+            max-width: 300px;
+            max-height: 500px;
+            overflow-y: auto;
         `;
+        
+        // Sestavit historii útoků
+        let historyHTML = '';
+        if (attackHistory.length > 0) {
+            historyHTML = '<div style="margin: 10px 0; font-size: 12px; line-height: 1.4;">';
+            
+            for (let i = 0; i < attackHistory.length; i++) {
+                const attackTime = new Date(attackHistory[i]);
+                const timeStr = attackTime.toLocaleTimeString("cs-CZ");
+                
+                // Vypočítat rozdíl s předchozím útokem
+                let intervalStr = "";
+                if (i > 0) {
+                    const prevAttackTime = attackHistory[i - 1];
+                    const diffMs = prevAttackTime - attackHistory[i];
+                    const diffSec = Math.floor(diffMs / 1000);
+                    const mins = Math.floor(diffSec / 60);
+                    const secs = diffSec % 60;
+                    
+                    if (mins > 0) {
+                        intervalStr = `${mins}m ${secs}s`;
+                    } else {
+                        intervalStr = `${secs}s`;
+                    }
+                } else {
+                    intervalStr = "-";
+                }
+                
+                historyHTML += `<div style="padding: 2px 0; border-bottom: 1px solid rgba(255,255,255,0.1);">
+                    #${i + 1} ${timeStr} <span style="color: #aaa;">(${intervalStr})</span>
+                </div>`;
+            }
+            
+            historyHTML += '</div>';
+        } else {
+            historyHTML = '<div style="margin: 10px 0; color: #888;">Žádná historie útoků</div>';
+        }
+        
         p.innerHTML = `
-            <strong>📋 Historie</strong><hr>
-            Odesláno celkem: ${totalSent}<br>
-            Celkový čas: ${fDuration(totalRuntime)}<br>
-            Poslední útok: ${lastAttack ? fTime(lastAttack) : "-"} ${lastAttack ? '(' + ago(lastAttack) + ')' : ""}<br><br>
+            <strong>📋 Historie posledních 25 útoků</strong><hr>
+            ${historyHTML}
+            <div style="margin-top: 10px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.2);">
+                <strong>Celkové statistiky:</strong><br>
+                Odesláno celkem: ${totalSent}<br>
+                Celkový čas: ${fDuration(totalRuntime)}<br>
+            </div>
             <button id="resetStats" style="
-                width:100%; padding:4px;
+                width:100%; padding:4px; margin-top: 8px;
                 border-radius:4px;
                 font-size:12px;
                 background:rgba(200,0,0,0.7);
@@ -455,6 +587,7 @@
                 totalSent = 0;
                 totalRuntime = 0;
                 lastAttack = null;
+                attackHistory = [];
                 saveStats();
                 updatePanel();
                 closeLog();
@@ -510,6 +643,12 @@
             ${createRadio("skin", "dark", "Dark")}
             ${createRadio("skin", "light", "Light")}
             <br>
+            
+            <b>Zvukový alert:</b><br>
+            ${createRadio("soundAlert", "none", "Žádný")}
+            ${createRadio("soundAlert", "beep", "Beep (krátké)")}
+            ${createRadio("soundAlert", "ding", "Ding (příjemné)")}
+            <br>
 
             <b>Průhlednost:</b> <span id="opVal">${config.opacity.toFixed(2)}</span><br>
             <input type="range" min="0.3" max="1" step="0.01"
@@ -542,6 +681,22 @@
             </label>
 
             <br>
+            
+            <b>Náhodná odchylka intervalu:</b><br>
+            <label style="display:flex;align-items:center;gap:5px;">
+                ±<input type="number" id="randomDeviation" value="${config.randomDeviation}" min="0" max="300" style="width:60px;"> sekund
+            </label>
+            <span style="font-size:11px;color:#aaa;">Bot může poslat útok o tuto hodnotu dříve nebo později</span>
+
+            <br><br>
+            
+            <b>Plánované vypnutí:</b><br>
+            <label style="display:flex;align-items:center;gap:5px;">
+                <input type="time" id="scheduledStop" value="${config.scheduledStop}" style="width:100px;">
+            </label>
+            <span style="font-size:11px;color:#aaa;">Bot se automaticky vypne v zadaný čas</span>
+
+            <br>
             <button id="saveBtn" style="
                 width:100%; padding:6px;
                 border-radius:5px;
@@ -558,6 +713,9 @@
 
         [...p.querySelectorAll("input[name='skin']")].forEach(el =>
             el.onchange = () => config.skin = el.value);
+
+        [...p.querySelectorAll("input[name='soundAlert']")].forEach(el =>
+            el.onchange = () => config.soundAlert = el.value);
 
         const slider = document.getElementById("opSlider");
         const opVal = document.getElementById("opVal");
@@ -608,6 +766,24 @@
         const delayInput = document.getElementById("firstAttackDelay");
         if (delayInput) delayInput.oninput = () => {
             config.firstAttackDelay = parseInt(delayInput.value) || 10;
+            if (!enabled) {
+                updatePanel();
+            }
+        };
+        
+        // Random deviation input
+        const deviationInput = document.getElementById("randomDeviation");
+        if (deviationInput) deviationInput.oninput = () => {
+            config.randomDeviation = parseInt(deviationInput.value) || 0;
+            if (!enabled) {
+                updatePanel();
+            }
+        };
+        
+        // Scheduled stop input
+        const stopInput = document.getElementById("scheduledStop");
+        if (stopInput) stopInput.oninput = () => {
+            config.scheduledStop = stopInput.value;
             if (!enabled) {
                 updatePanel();
             }

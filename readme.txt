@@ -1,130 +1,204 @@
-NÁZEV: TravianFarmlistAutoclicker2.0
-VERZE: 1.1
-POPIS: Automatické odesílání farmlistů na Travian serveru pomocí Tampermonkey.
+🚜 Travian Farmlist Autoclicker
 
-ÚČEL SCRIPTU
+Pokročilý userscript pro automatizaci odesílání farmlistů v prohlížečové hře Travian. Bot nabízí širokou škálu nastavení, statistiky a realistické chování pro bezpečnější používání.
 
-Tento skript automaticky kliká na tlačítko "Poslat všechny farmlisty" na stránce farmlistů v Travianu (URL obsahující tt=99).
-Časování je náhodné mezi 4 a 6 minutami.
-Po každém kliknutí zobrazí skript informační okno (toast), které uvádí čas posledního odeslání a čas následujícího odeslání.
-Skript lze manuálně zapnout nebo vypnout pomocí ovládacího panelu v pravém dolním rohu obrazovky.
+✨ Hlavní funkce
+🎯 Automatizace
 
-FUNKCE
+Automatické posílání farmlistů s nastavitelným intervalem
+Náhodná odchylka (±X sekund) pro přirozenější chování
+Plánované vypnutí v konkrétní čas
+Prodleva prvního útoku po zapnutí bota
+Vlastní intervaly nebo výběr z přednastavených (2-16 min)
 
-Automatické kliknutí na "Poslat všechny farmlisty"
+🎨 Uživatelské rozhraní
 
-Náhodný interval mezi 4–6 minutami
+3 vizuální témata: Traffic (semafor), Dark, Light
+Přetahovatelný panel s možností zamčení pozice
+Nastavitelná průhlednost s živým náhledem
+Responzivní design - minimální, elegantní vzhled
+Rychlé ovládání pomocí ikon
 
-Po zapnutí skriptu se první klik provede po 10 sekundách
+📊 Statistiky & Historie
 
-Viditelné upozornění na odeslání (toast), které zůstává na obrazovce 5 sekund
+Trvalé statistiky (přežijí refresh stránky)
+Historie posledních 25 útoků s časovými intervaly
+Celkový čas běhu a počet odeslaných útoků
+Vizualizace intervalů mezi jednotlivými útoky
+Reset statistik na jedno kliknutí
 
-Ovládací panel (ON/OFF) přímo v Travianu
+🔊 Notifikace
 
-Skript nepracuje, pokud nejste na stránce farmlistu (tt=99)
+Zvukové alerty při každém útoku
 
-Bezpečný – neodesílá žádná data, obsahuje pouze kliknutí v DOM
-
-INSTALACE
-
-Nainstalujte rozšíření Tampermonkey (Chrome/Firefox/Edge/Opera).
-
-Otevřete Tampermonkey -> Create a new script.
-
-Odstraňte vše a vložte obsah souboru "TravianFarmlistAutoclicker2.0.user.js".
-
-Uložte skript (CTRL+S).
-
-Otevřete Travian.
-
-Přejděte na stránku farmlistů (URL obsahující tt=99).
-
-V pravém dolním rohu klikněte na panel "Farmlist bot: OFF" pro zapnutí.
-
-POPIS CHOVÁNÍ
-
-Po načtení stránky je bot vždy ve stavu OFF.
-
-Po kliknutí na ON skript zobrazí informaci o aktivaci a o plánovaném prvním kliknutí.
-
-První klik proběhne přesně 10 sekund po přepnutí na ON.
-
-Po každém kliknutí se znovu spočítá náhodný interval 4–6 minut.
-
-Po každém kliknutí se zobrazí okno s informací:
-"Farmlist kliknut v HH:MM:SS"
-"Další farmlist se pošle v HH:MM:SS"
-
-Pokud tlačítko "Poslat všechny farmlisty" není nalezeno, skript to zkusí znovu za 30 sekund.
-
-POŽADAVKY
-
-Tampermonkey v5.0 nebo novější
-
-Zapnutý JavaScript v prohlížeči
-
-LIMITACE A UPOZORNĚNÍ
-
-Tento skript je určen pouze pro osobní použití.
-Travian obecně nepovoluje automatizaci hry.
-Používání skriptu je na vlastní riziko.
-
-ODINSTALACE
-
-Otevřete Tampermonkey.
-
-Najděte skript s názvem "TravianFarmlistAutoclicker2.0".
-
-Klikněte na koš nebo přepněte do OFF.
-
-VERZE A ZMĚNY
-
-Verze 1.0:
-
-Přidán toast s informacemi o kliku
-
-Delay prvního kliku nastaven na 10s
-
-Úprava ovládacího panelu
-
-Oprava hlavičky scriptu pro správné zobrazení názvu
-
-Celkové čištění kódu
-
-Verze 1.1:
-
-Přidaná podpora všech travian serverů
-
-Nové funkce ve verzi 1.2:
-
-Permanentní informační panel - Toast s informacemi je viditelný celou dobu běhu bota (nezmizel po 5 sekundách)
-Počítadlo kliků - Bot počítá, kolikrát už poslal farmlisty
-Vylepšený ovládací panel - Barevné indikátory (🟢 ON / 🔴 OFF) a zobrazení počtu odeslaných útoků
-Hover efekt - Panel se při najetí myší lehce zvětší
-
-Bezpečnostní vylepšení:
-
-Kontrola disabled tlačítka - Bot neklikne, pokud je tlačítko neaktivní
-Automatické zrušení timeoutů - Při vypnutí bota se všechny naplánované akce správně zaruší
-Sledování změny URL - Bot detekuje, když opustíš Farmlist tab
-Retry logika - Pokud není tlačítko nalezeno, zkusí to znovu za 30s
-
-Lepší přehlednost:
-
-Permanentní toast zobrazuje:
-
-✓ Čas posledního kliku
-Celkový počet odeslaných farmlistů
-Přesný čas příštího kliku
+Beep (krátké pípnutí)
+Ding (příjemný dvojitý tón)
+Žádný
 
 
-Emoji ikony pro rychlou orientaci (✓, ⚠️, 🔴, 🟢)
-Statistiky při vypnutí - Vidíš celkový počet odeslaných útoků
+Varování před zavřením stránky když bot běží
 
-⚙️ Technické úpravy:
+🛡️ Bezpečnost
 
-Interval: 2-3 minuty (náhodně mezi 2-3 min pro větší přirozenost)
-První klik po zapnutí: 10 sekund
-Retry při chybě: 30 sekund
-Lepší správa paměti (odstranění starých toastů, čištění timeoutů)
-RetryClaude can make mistakes. Please double-check responses. Sonnet 4.5
+Automatický retry při nenalezení tlačítka
+Validace vstupů (kontrola min ≤ max)
+Console logging pro debugging
+Náhodné odchylky pro lidštější chování
+
+📦 Instalace
+Krok 1: Nainstalujte správce userscriptů
+Nainstalujte jeden z těchto doplňků do svého prohlížeče:
+
+Tampermonkey (doporučeno)
+Violentmonkey
+Greasemonkey (pouze Firefox)
+
+Krok 2: Nainstalujte script
+
+Klikněte na soubor TravianFarmlistAutoclicker2.0-1.0.user.js
+Otevřete raw verzi souboru
+Správce userscriptů by měl automaticky nabídnout instalaci
+Potvrďte instalaci
+
+Krok 3: Použití
+
+Otevřete Travian a přejděte na stránku s farmlisty (URL obsahuje tt=99)
+Panel bota se automaticky zobrazí v pravém dolním rohu
+Nastavte si interval a další parametry
+Klikněte na ▶ tlačítko pro spuštění
+
+🎮 Návod k použití
+Základní ovládání
+Tlačítka na panelu:
+
+📋 Log - Otevře historii útoků a statistiky
+▶ / ✖ Play/Stop - Spustí/zastaví bota
+⚙️ Nastavení - Otevře panel s nastavením
+
+Panel když bot NEBĚŽÍ:
+🔴 Bot: OFF
+Interval: 2–3 min
+Prodlení prvního útoku: 10s
+Náhodná odchylka: ±30s
+Plánované vypnutí: 23:00
+Panel když bot BĚží:
+🟢 Bot: ON
+Další útok: 14:25:30 (za 2m)
+Odesláno: 5×
+Běží: 12m 34s
+Poslední útok: 14:23:15 (před 2m)
+Nastavení
+🎨 Vzhled
+
+Skin: Traffic (zelená/červená podle stavu) / Dark / Light
+Průhlednost: Slider 0.3 - 1.0
+Zamknout panel: Zaškrtnutím znemožníte přetahování
+
+⏱️ Časování
+
+Interval: 2-3, 4-6, 8-10, 12-14, 14-16 min nebo vlastní
+Vlastní interval: Zadejte min a max v minutách
+Prodlení prvního útoku: 1-300 sekund (výchozí: 10s)
+Náhodná odchylka: ±0-300 sekund pro přirozenější chování
+Plánované vypnutí: Zadejte čas ve formátu HH:MM
+
+🔊 Zvuky
+
+Žádný: Bez zvukových notifikací
+Beep: Krátké pípnutí při každém útoku
+Ding: Příjemný dvojitý tón
+
+Historie útoků
+Kliknutím na 📋 otevřete log panel s historií:
+📋 Historie posledních 25 útoků
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+#1  14:23:45 (-)
+#2  14:20:30 (3m 15s)
+#3  14:17:42 (2m 48s)
+...
+
+Celkové statistiky:
+Odesláno celkem: 156
+Celkový čas: 5h 23m
+
+[Resetovat statistiky]
+⚙️ Konfigurace
+Všechna nastavení jsou automaticky ukládána do localStorage a přežijí:
+
+✅ Refresh stránky
+✅ Restart prohlížeče
+✅ Vypnutí počítače
+
+Uložená data
+
+Pozice panelu (X, Y)
+Vizuální nastavení (skin, průhlednost, zámek)
+Časové nastavení (interval, prodleva, odchylka, plánované vypnutí)
+Zvukové alerty
+Statistiky (celkový počet útoků, čas běhu)
+Historie posledních 25 útoků
+
+Velikost dat: ~200-500 bytes (zanedbatelné)
+🔧 Pokročilé funkce
+Náhodná odchylka
+Přidává náhodnou odchylku k nastaveným intervalům:
+
+Interval: 10 min + Odchylka: ±30s
+Skutečný čas: 9m 30s - 10m 30s
+Výsledek: Přirozenější, méně detekovatelné chování
+
+Plánované vypnutí
+Bot se automaticky vypne v zadaný čas:
+
+Nastavíte: 23:00
+Bot běží normálně až do 23:00
+O půlnoci se vypne a zobrazí alert
+Užitečné před spaním/odchodem z PC
+
+Automatický retry
+Pokud bot nenajde tlačítko "Poslat všechny farmlisty":
+
+Zapíše varování do konzole
+Zkusí to znovu za 30 sekund
+Pokračuje v pokusu až tlačítko najde
+
+🐛 Řešení problémů
+Panel se nezobrazuje
+
+✅ Zkontrolujte, že jste na správné stránce (URL obsahuje tt=99)
+✅ Otevřete konzoli (F12) a hledejte chybové hlášky
+✅ Zkuste refresh stránky (Ctrl+R)
+
+Bot nekliká na tlačítko
+
+✅ Ujistěte se, že tlačítko má text "Poslat všechny farmlisty"
+✅ Zkontrolujte konzoli - bot loguje když nenajde tlačítko
+✅ Může se lišit jazyk hry - upravte text v kódu
+
+Statistiky se neukládají
+
+✅ Zkontrolujte, že prohlížeč povoluje localStorage
+✅ Vymažte cache a cookies
+✅ Zkuste jiný prohlížeč
+
+Zvuky nefungují
+
+✅ Zkontrolujte, že stránka má povolení přehrávat zvuky
+✅ Některé prohlížeče blokují autoplay - klikněte na stránku před spuštěním
+✅ Zkuste zvýšit hlasitost systému
+
+🚨 Upozornění
+⚠️ Používejte na vlastní riziko!
+
+Tento bot je proti pravidlům většiny online her včetně Travianu
+Používání může vést k banu účtu
+Doporučujeme používat pouze na testovacích serverech
+Autor nenese odpovědnost za jakékoliv následky použití
+
+Doporučení pro bezpečnější použití:
+
+✅ Používejte náhodné odchylky (±30-60s)
+✅ Nestavějte intervaly příliš krátké (min. 2 minuty)
+✅ Používejte plánované vypnutí - bot by neměl běžet 24/7
+✅ Pravidelně měňte intervaly
+✅ Nenechávejte bot běžet přes noc
