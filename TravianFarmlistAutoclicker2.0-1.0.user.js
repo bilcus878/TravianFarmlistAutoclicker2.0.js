@@ -1,8 +1,8 @@
 // ==UserScript==
-// @name         TravianFarmlistAutoclicker 2.12.3 UI FIX FINAL + CUSTOM SPACING
+// @name         TravianFarmlistAutoclicker2.0
 // @namespace    https://github.com/custom
-// @version      2.12.5
-// @description  Farmlist bot with improved UI (Bot:OFF up, minimal spacing, perfect bottom alignment)
+// @version      1.5
+// @description  Farmlist bot 
 // @match        *://*.travian.com/build.php*
 // @grant        none
 // ==/UserScript==
@@ -21,6 +21,8 @@
     let attackHistory = JSON.parse(localStorage.getItem("fl_attackHistory") || "[]");
     let sessionSent = 0;
     let sessionStart = null;
+    let isPageVisible = true;
+    let lastVisibilityChange = Date.now();
 
     let nextClickTime = null;
     let timeoutHandle = null;
@@ -91,24 +93,38 @@
     };
 
     function randomDelay() {
-        let delay;
+        let baseDelay;
+        let minDelay, maxDelay;
         
         if (config.intervalPreset === "custom") {
-            const min = config.customMin * 60000;
-            const max = config.customMax * 60000;
-            delay = min + Math.random() * (max - min);
+            minDelay = config.customMin * 60000;
+            maxDelay = config.customMax * 60000;
         } else {
             const p = preset[config.intervalPreset];
-            delay = p.min + Math.random() * (p.max - p.min);
+            minDelay = p.min;
+            maxDelay = p.max;
         }
         
-        // Přidej náhodnou odchylku
+        // Náhodný čas v rozmezí min-max
+        baseDelay = minDelay + Math.random() * (maxDelay - minDelay);
+        
+        // Přidej náhodnou odchylku (-X až +X sekund)
+        let deviation = 0;
         if (config.randomDeviation > 0) {
-            const deviation = (Math.random() * 2 - 1) * config.randomDeviation * 1000; // -X až +X sekund
-            delay += deviation;
+            deviation = (Math.random() * 2 - 1) * config.randomDeviation * 1000;
         }
         
-        return Math.max(1000, delay); // Minimálně 1 sekunda
+        const finalDelay = baseDelay + deviation;
+        
+        // Zajisti že jsme v povoleném rozmezí
+        const absoluteMin = Math.max(1000, minDelay - (config.randomDeviation * 1000));
+        const absoluteMax = maxDelay + (config.randomDeviation * 1000);
+        
+        const clampedDelay = Math.max(absoluteMin, Math.min(finalDelay, absoluteMax));
+        
+        console.log(`Interval: ${minDelay/1000}s - ${maxDelay/1000}s, Deviation: ±${config.randomDeviation}s, Final: ${Math.round(clampedDelay/1000)}s`);
+        
+        return clampedDelay;
     }
 
     function findButton() {
@@ -120,15 +136,17 @@
     function ago(t) {
         if (!t) return "-";
         let s = Math.floor((Date.now() - t.getTime()) / 1000);
-        if (s < 60) return `před ${s}s`;
-        return `před ${Math.floor(s / 60)}m`;
+        const m = Math.floor(s / 60);
+        const sec = s % 60;
+        return `${String(m).padStart(2, '0')}:${String(sec).padStart(2, '0')}`;
     }
     function timeUntil(t) {
         if (!t) return "-";
         let s = Math.floor((t.getTime() - Date.now()) / 1000);
-        if (s < 0) return "nyní";
-        if (s < 60) return `za ${s}s`;
-        return `za ${Math.floor(s / 60)}m`;
+        if (s < 0) return "00:00";
+        const m = Math.floor(s / 60);
+        const sec = s % 60;
+        return `${String(m).padStart(2, '0')}:${String(sec).padStart(2, '0')}`;
     }
     function fDuration(ms) {
         if (!ms) return "-";
@@ -258,9 +276,9 @@
 
         panel.style.cssText = `
             position: fixed;
-            width: 230px;
+            width: 260px;
             min-height: 110px;
-            padding: 10px 14px 3px 14px;
+            padding: 10px 14px 2px 14px;
             border-radius: 10px;
             z-index: 999999;
             font-size: 13px;
@@ -409,6 +427,11 @@
     function clickOnce() {
         if (!enabled) return;
 
+        // Varování pokud tab není aktivní
+        if (!isPageVisible) {
+            console.warn("⚠️ Bot běží v neaktivním tabu - časovače nejsou spolehlivé!");
+        }
+
         // Kontrola plánovaného vypnutí
         if (config.scheduledStop) {
             const now = new Date();
@@ -491,6 +514,27 @@
        LEAVE WARNING
     ============================================================ */
 
+    // Detekce viditelnosti tabu
+    document.addEventListener("visibilitychange", function() {
+        const wasVisible = isPageVisible;
+        isPageVisible = !document.hidden;
+        
+        if (!isPageVisible) {
+            lastVisibilityChange = Date.now();
+            console.log("⚠️ Tab neaktivní - časovače mohou být nepřesné");
+        } else if (!wasVisible && isPageVisible) {
+            const inactiveTime = Date.now() - lastVisibilityChange;
+            console.log(`✅ Tab aktivní znovu (byl neaktivní ${Math.round(inactiveTime/1000)}s)`);
+            
+            // Pokud byl bot zapnutý a tab byl dlouho neaktivní, přeplánuj útok
+            if (enabled && inactiveTime > 60000) { // více než 1 minuta
+                console.log("🔄 Přeplánování útoku po dlouhé neaktivitě");
+                clearTimeout(timeoutHandle);
+                scheduleNext();
+            }
+        }
+    });
+
     window.addEventListener("beforeunload", function (e) {
         if (enabled) {
             e.preventDefault();
@@ -524,20 +568,22 @@
             overflow-y: auto;
         `;
         
-        // Sestavit historii útoků
+        // Sestavit historii útoků (od nejstaršího)
         let historyHTML = '';
         if (attackHistory.length > 0) {
             historyHTML = '<div style="margin: 10px 0; font-size: 12px; line-height: 1.4;">';
             
-            for (let i = 0; i < attackHistory.length; i++) {
+            // Projít od konce (nejstarší) k začátku (nejnovější)
+            for (let i = attackHistory.length - 1; i >= 0; i--) {
                 const attackTime = new Date(attackHistory[i]);
                 const timeStr = attackTime.toLocaleTimeString("cs-CZ");
+                const displayNum = attackHistory.length - i;
                 
                 // Vypočítat rozdíl s předchozím útokem
                 let intervalStr = "";
-                if (i > 0) {
-                    const prevAttackTime = attackHistory[i - 1];
-                    const diffMs = prevAttackTime - attackHistory[i];
+                if (i < attackHistory.length - 1) {
+                    const prevAttackTime = attackHistory[i + 1];
+                    const diffMs = attackHistory[i] - prevAttackTime;
                     const diffSec = Math.floor(diffMs / 1000);
                     const mins = Math.floor(diffSec / 60);
                     const secs = diffSec % 60;
@@ -552,7 +598,7 @@
                 }
                 
                 historyHTML += `<div style="padding: 2px 0; border-bottom: 1px solid rgba(255,255,255,0.1);">
-                    #${i + 1} ${timeStr} <span style="color: #aaa;">(${intervalStr})</span>
+                    #${displayNum} ${timeStr} <span style="color: #aaa;">(${intervalStr})</span>
                 </div>`;
             }
             
@@ -561,13 +607,16 @@
             historyHTML = '<div style="margin: 10px 0; color: #888;">Žádná historie útoků</div>';
         }
         
+        // Vypočítat aktuální celkový čas
+        const currentTotalRuntime = totalRuntime + (sessionStart ? (Date.now() - sessionStart) : 0);
+        
         p.innerHTML = `
             <strong>📋 Historie posledních 25 útoků</strong><hr>
             ${historyHTML}
             <div style="margin-top: 10px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.2);">
                 <strong>Celkové statistiky:</strong><br>
                 Odesláno celkem: ${totalSent}<br>
-                Celkový čas: ${fDuration(totalRuntime)}<br>
+                Celkový čas: ${fDuration(currentTotalRuntime)}<br>
             </div>
             <button id="resetStats" style="
                 width:100%; padding:4px; margin-top: 8px;
